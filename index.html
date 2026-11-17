@@ -1,0 +1,1231 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>كروت المحتوى · Co & Part</title>
+<meta name="description" content="بوابة كروت المحتوى لفريق Co & Part: بطاقات المحتوى ولوحات الأسابيع لكل عميل.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#3B0C2D">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Kufam:wght@600;700;800&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+/* Co & Part brand: Foundation Plum #3B0C2D, Strategic Magenta #981C74, Catalyst Yellow #F8F501, System Teal #2CC2B9, Architectural Canvas #F5F5F5.
+   Layout: plum brand bar on top → page header → clients home or client workspace (week board + cards); edit sheets as modal dialogs. */
+:root {
+  --plum: #3B0C2D; --magenta: #981C74; --yellow: #F8F501; --teal: #2CC2B9; --canvas: #F5F5F5;
+  --bg: #F5F5F5;
+  --surface: #FFFFFF;
+  --surface-2: #F8F1F5;
+  --ink: #2B0A21;
+  --muted: #6E5466;
+  --line: #E9DCE5;
+  --accent: #3B0C2D;
+  --accent-fg: #F8F501;
+  --hl: #981C74;
+  --danger: #B42318;
+  --danger-soft: #FDE8E6;
+
+  --bgc: #981C74; --bgc-soft: #F7E4F0;
+  --egc: #0B6A62; --egc-soft: #DCF1EE;
+  --igc: #8F5400; --igc-soft: #FBEACF;
+  --pgc: #4A3B8F; --pgc-soft: #E7E3F5;
+
+  --f-display: "Kufam", "IBM Plex Sans Arabic", Tahoma, sans-serif;
+  --f-body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+
+  --r: 16px;
+  --shadow: 0 1px 2px rgba(59, 12, 45, .06), 0 6px 18px rgba(59, 12, 45, .06);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1F0818; --surface: #2C0C23; --surface-2: #38112E; --ink: #F5F5F5; --muted: #D4AFC9; --line: #4A1E3F;
+    --accent: #F8F501; --accent-fg: #3B0C2D; --hl: #F7A6DC; --danger: #FFA99E; --danger-soft: #3A1714;
+    --bgc: #F7A6DC; --bgc-soft: #4A1240; --egc: #7FE6DF; --egc-soft: #0F3A37;
+    --igc: #F5B65A; --igc-soft: #3E2A0E; --pgc: #BDB3F7; --pgc-soft: #2A2350;
+    --shadow: 0 1px 2px rgba(0,0,0,.4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1F0818; --surface: #2C0C23; --surface-2: #38112E; --ink: #F5F5F5; --muted: #D4AFC9; --line: #4A1E3F;
+  --accent: #F8F501; --accent-fg: #3B0C2D; --hl: #F7A6DC; --danger: #FFA99E; --danger-soft: #3A1714;
+  --bgc: #F7A6DC; --bgc-soft: #4A1240; --egc: #7FE6DF; --egc-soft: #0F3A37;
+  --igc: #F5B65A; --igc-soft: #3E2A0E; --pgc: #BDB3F7; --pgc-soft: #2A2350;
+  --shadow: 0 1px 2px rgba(0,0,0,.4);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--bg); }
+body { margin: 0; color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.65; }
+
+/* Brand bar */
+.brandbar { background: var(--plum); color: var(--canvas); position: sticky; top: 0; z-index: 30; padding-top: env(safe-area-inset-top, 0px); }
+.brandbar .in {
+  max-width: 1240px; margin: 0 auto; min-height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; color: inherit; text-decoration: none; }
+.brand img { height: 30px; width: auto; display: block; }
+.brand span { font-size: 13px; color: #DCCAD6; border-inline-start: 1px solid rgba(245,245,245,.25); padding-inline-start: 12px; white-space: nowrap; }
+.userbox { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 13px; color: #DCCAD6; }
+.userbox .em { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 30vw; direction: ltr; }
+.btn-bar { border: 1px solid rgba(245,245,245,.35); background: transparent; color: var(--canvas); border-radius: 999px; padding: 5px 14px; cursor: pointer; font-weight: 600; font-size: 13px; white-space: nowrap; }
+.btn-bar:hover { background: rgba(245,245,245,.1); }
+@media (max-width: 560px) { .brand span, .userbox .em { display: none; } }
+
+/* Login + access screens */
+.gate { min-height: calc(100dvh - 60px); display: grid; place-items: center; padding: 32px 16px; }
+.gate-card { width: min(420px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 28px 24px; display: flex; flex-direction: column; gap: 16px; }
+.gate-card .mark { width: 54px; height: 54px; border-radius: 14px; }
+.gate-card h1 { font-size: 24px; font-weight: 800; }
+.gate-card p { margin: 0; color: var(--muted); }
+.gate-card .field input { width: 100%; }
+.gate-msg { margin: 0; font-size: 13.5px; color: var(--danger); }
+.gate-msg.ok { color: var(--egc); }
+.or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12.5px; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.gate-card .btn { justify-content: center; }
+.gate-foot { font-size: 12.5px; color: var(--muted); }
+.app {
+  max-width: 1240px; margin: 0 auto;
+  padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 22px;
+}
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+button, input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Header */
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.top h1 { font-size: clamp(24px, 3.4vw, 32px); font-weight: 800; letter-spacing: -.2px; }
+.top p { margin: 4px 0 0; color: var(--muted); }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line);
+  background: var(--surface); padding: 9px 16px; border-radius: 10px; cursor: pointer; font-weight: 600;
+  transition: background .15s, border-color .15s;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.danger { color: var(--danger); }
+.btn.danger.solid { background: var(--danger); color: var(--surface); border-color: var(--danger); }
+.btn.ghost { background: transparent; border-color: transparent; padding-inline: 10px; }
+.btn.ghost:hover { background: var(--surface-2); }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* Summary + filters */
+.summary { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; color: var(--muted); font-size: 14px; }
+.summary b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.sum-cat { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+.filters {
+  display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px;
+}
+.search { flex: 1 1 220px; min-width: 0; position: relative; }
+.search input {
+  width: 100%; border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px;
+  padding: 8px 36px 8px 12px;
+}
+.search svg { position: absolute; right: 11px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--muted); }
+.fgroup { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fgroup .lbl { font-size: 12px; color: var(--muted); letter-spacing: .3px; margin-inline-end: 2px; }
+.chip {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px;
+  font-size: 13px; cursor: pointer; font-weight: 500;
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.filters select { border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 7px 10px; }
+
+.note {
+  border: 1px dashed var(--line); border-radius: 10px; padding: 9px 14px; font-size: 13.5px; color: var(--muted);
+  background: var(--surface);
+}
+
+/* Grid of cards */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; align-items: start; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow);
+  display: flex; flex-direction: column; overflow: hidden; min-width: 0;
+}
+.slate {
+  --c: var(--muted); --cs: var(--surface-2);
+  background: var(--cs); color: var(--c);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 9px 16px; border-bottom: 1px solid var(--line);
+}
+.slate .code { font-family: var(--f-mono); font-weight: 600; font-size: 13px; letter-spacing: .5px; direction: ltr; }
+.slate .cat { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; font-weight: 500; }
+.slate .cat b { font-family: var(--f-mono); font-size: 13.5px; letter-spacing: .6px; }
+.cat-BGC { --c: var(--bgc); --cs: var(--bgc-soft); }
+.cat-EGC { --c: var(--egc); --cs: var(--egc-soft); }
+.cat-IGC { --c: var(--igc); --cs: var(--igc-soft); }
+.cat-PGC { --c: var(--pgc); --cs: var(--pgc-soft); }
+
+.card-body { padding: 14px 16px 6px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card h3 { font-size: 17px; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 13.5px; margin: 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.fmt { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.fmt svg { width: 16px; height: 16px; }
+.plats { display: flex; flex-wrap: wrap; gap: 4px; }
+.plat { font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 0 7px; background: var(--surface-2); }
+.dim { color: var(--muted); }
+.script {
+  background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font-size: 13.5px;
+  white-space: pre-line; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+.script-lbl { font-size: 12px; color: var(--muted); letter-spacing: .3px; margin-bottom: -6px; }
+.facts a { color: var(--accent); word-break: break-all; }
+.card-foot { display: flex; gap: 4px; justify-content: flex-start; padding: 6px 10px 10px; border-top: 1px solid var(--line); margin-top: 8px; }
+.card-foot .btn { font-size: 13.5px; padding-block: 6px; }
+
+/* Empty state */
+.empty { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: 28px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 28px; }
+.empty h2 { font-size: 22px; margin-bottom: 8px; }
+.empty p { color: var(--muted); margin: 0 0 16px; max-width: 52ch; }
+.empty .sample { position: relative; }
+.empty .sample::before {
+  content: "نموذج توضيحي"; position: absolute; top: -11px; left: 14px; z-index: 1;
+  background: var(--ink); color: var(--bg); font-size: 11.5px; padding: 1px 10px; border-radius: 999px;
+}
+.empty .sample .card { box-shadow: none; }
+.cat-legend { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 13.5px; margin-bottom: 18px; }
+.cat-legend b { font-family: var(--f-mono); }
+@media (max-width: 760px) { .empty { grid-template-columns: 1fr; padding: 20px; } }
+
+/* Dialog */
+dialog {
+  border: 1px solid var(--line); border-radius: 18px; padding: 0; width: min(720px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px); background: var(--surface); color: var(--ink);
+}
+dialog::backdrop { background: rgba(10, 14, 22, .45); }
+.sheet { display: flex; flex-direction: column; max-height: calc(100dvh - 26px); }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.sheet-head h2 { font-size: 18px; }
+.sheet-head .code { font-family: var(--f-mono); color: var(--muted); font-size: 13px; direction: ltr; }
+.sheet-body { overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 18px; }
+.sheet-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 20px; border-top: 1px solid var(--line); }
+.sheet-foot .spacer { flex: 1; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > label, .field > .flabel { font-weight: 600; font-size: 14px; }
+.field .hint { font-size: 12.5px; color: var(--muted); margin: 0; }
+.field input[type="text"], .field input[type="email"], .field input[type="password"], .field textarea {
+  border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 9px 12px; width: 100%;
+}
+.field textarea { min-height: 150px; resize: vertical; line-height: 1.75; }
+.field input:focus, .field textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 18px; }
+@media (max-width: 560px) { .row2, .row3 { grid-template-columns: 1fr; } }
+.slate .code small { font-family: var(--f-body); font-weight: 500; letter-spacing: 0; margin-inline-start: 6px; }
+
+.seg { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg label { cursor: pointer; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg .opt {
+  display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 10px;
+  padding: 7px 13px; background: var(--surface); font-weight: 500; font-size: 14px;
+}
+.seg .opt svg { width: 17px; height: 17px; }
+.seg input:checked + .opt { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+.seg input:focus-visible + .opt { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg.cats .opt { flex-direction: column; align-items: flex-start; gap: 0; padding: 7px 12px; min-width: 120px; }
+.seg.cats .opt b { font-family: var(--f-mono); letter-spacing: .6px; }
+.seg.cats .opt small { font-size: 12px; opacity: .8; }
+.seg.cats input:checked + .opt { color: var(--c); background: var(--cs); border-color: var(--c); }
+.seg.plats-pick .opt { padding: 5px 12px; font-size: 13.5px; }
+.seg.plats-pick input:checked + .opt { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+
+.err { color: var(--danger); font-size: 13px; margin: 0; }
+.confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--danger-soft); color: var(--danger); border-radius: 10px; padding: 6px 10px; font-size: 13.5px; }
+
+.toast {
+  position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: var(--bg); padding: 9px 18px; border-radius: 10px; font-size: 14px; z-index: 50;
+  box-shadow: 0 6px 20px rgba(0,0,0,.2);
+}
+/* Funnel stage */
+.fun { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+.fun b { font-family: var(--f-mono); letter-spacing: .5px; font-size: 13px; }
+.fun small { font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.lv { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; flex: none; }
+.lv i { display: block; height: 3px; border-radius: 2px; background: var(--line); }
+.lv i:nth-child(1) { width: 15px; } .lv i:nth-child(2) { width: 10px; } .lv i:nth-child(3) { width: 5px; }
+.lv i.on { background: var(--accent); }
+.seg.funnel .opt { flex-direction: row; align-items: center; gap: 9px; padding: 7px 12px; }
+.seg.funnel .opt b { font-family: var(--f-mono); letter-spacing: .5px; }
+.seg.funnel .opt small { font-size: 12px; opacity: .8; display: block; }
+.seg.funnel input:checked + .opt .lv i { background: color-mix(in srgb, var(--bg) 35%, transparent); }
+.seg.funnel input:checked + .opt .lv i.on { background: var(--bg); }
+.sum-sep { width: 1px; height: 16px; background: var(--line); }
+.wk-fun { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); letter-spacing: .3px; direction: ltr; text-align: end; }
+.wk-fun b { color: var(--ink); font-weight: 600; }
+
+/* Clients */
+.ws { display: flex; flex-direction: column; gap: 22px; }
+.crumbs { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+.crumb { border: 0; background: none; padding: 2px 0; color: var(--accent); cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+.crumb:hover { text-decoration: underline; }
+.crumb svg { width: 15px; height: 15px; }
+.clients { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 14px; }
+.ct {
+  text-align: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow);
+  padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; min-width: 0; min-height: 170px;
+}
+.ct:hover { border-color: var(--muted); }
+.ct-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ct-mark {
+  width: 42px; height: 42px; border-radius: 12px; flex: none; display: grid; place-items: center;
+  background: var(--ink); color: var(--bg); font-family: var(--f-display); font-weight: 800; font-size: 18px;
+}
+.ct-name { font-family: var(--f-display); font-weight: 700; font-size: 18px; overflow-wrap: anywhere; min-width: 0; }
+.ct-n { font-size: 13px; color: var(--muted); }
+.ct-n b { color: var(--ink); font-size: 15px; font-variant-numeric: tabular-nums; }
+.ct .wk-fun { text-align: start; }
+.ct .bar { display: flex; gap: 2px; height: 6px; margin-top: auto; }
+.ct .bar i { display: block; border-radius: 99px; }
+.ct-meta { font-size: 12px; color: var(--muted); }
+.ct.add { border-style: dashed; box-shadow: none; background: transparent; align-items: center; justify-content: center; color: var(--muted); font-weight: 600; gap: 8px; }
+.ct.add svg { width: 26px; height: 26px; }
+.ct.add:hover { color: var(--ink); }
+.ct.orphan { background: var(--surface-2); box-shadow: none; }
+.field select { border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 9px 12px; width: 100%; }
+dialog.small { width: min(460px, calc(100vw - 24px)); }
+
+/* View switch */
+.top-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.views { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 11px; padding: 3px; gap: 2px; }
+.views button { border: 0; background: transparent; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--muted); }
+.views button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+/* Week board */
+.board { display: flex; flex-direction: column; gap: 20px; }
+.month-row h2 { font-size: 15px; font-weight: 700; display: flex; gap: 10px; align-items: baseline; margin-bottom: 10px; }
+.month-row h2 small { font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-weight: 500; direction: ltr; unicode-bidi: isolate; }
+.weeks { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 10px; }
+.wk {
+  text-align: start; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px 14px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 8px; min-height: 116px;
+  box-shadow: var(--shadow); min-width: 0;
+}
+.wk:hover { border-color: var(--muted); }
+.wk[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+.wk-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; }
+.wk-code { white-space: nowrap; }
+.wk-code { font-family: var(--f-mono); font-weight: 600; font-size: 19px; direction: ltr; letter-spacing: .3px; }
+.wk-code.ar { font-family: var(--f-display); font-size: 14px; direction: rtl; letter-spacing: 0; }
+.wk-n { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.wk-n b { color: var(--ink); font-size: 15px; font-variant-numeric: tabular-nums; }
+.wk-fmts { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.wk-fmts span { display: inline-flex; align-items: center; gap: 3px; }
+.wk-fmts svg { width: 14px; height: 14px; }
+.wk .bar { display: flex; gap: 2px; height: 5px; margin-top: auto; }
+.wk .bar i { display: block; border-radius: 99px; }
+.wk.wk-none { box-shadow: none; background: transparent; border-style: dashed; }
+.wk.wk-none[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.wk.span:not([aria-pressed="true"]) { background: var(--surface-2); }
+.week-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 8px 16px; border-top: 1px solid var(--line); padding-top: 20px; scroll-margin-top: 12px; }
+.week-head h2 { font-size: 21px; font-weight: 800; }
+.week-head p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .card { transition: transform .15s, box-shadow .15s; }
+  .card:hover { transform: translateY(-2px); }
+}
+</style>
+</head>
+<body>
+<header class="brandbar">
+  <div class="in">
+    <a class="brand" href="./" aria-label="Co & Part · كروت المحتوى"><img src="img/logo-primary.svg" alt="Co & Part"><span>كروت المحتوى</span></a>
+    <div class="userbox" id="userBox" hidden>
+      <span class="em" id="userEmail"></span>
+      <button type="button" class="btn-bar" id="signOutBtn">تسجيل الخروج</button>
+    </div>
+  </div>
+</header>
+
+<main class="gate" id="loginView" hidden>
+  <form class="gate-card" id="loginForm" novalidate>
+    <img class="mark" src="img/favicon.png" alt="" aria-hidden="true">
+    <div>
+      <h1>تسجيل الدخول</h1>
+      <p>بوابة كروت المحتوى لفريق Co & Part</p>
+    </div>
+    <div class="field">
+      <label for="lEmail">البريد الإلكتروني</label>
+      <input type="email" id="lEmail" autocomplete="email" inputmode="email" dir="ltr" placeholder="name@company.com">
+    </div>
+    <div class="field">
+      <label for="lPass">كلمة المرور</label>
+      <input type="password" id="lPass" autocomplete="current-password" dir="ltr">
+    </div>
+    <p class="gate-msg" id="loginMsg" hidden role="status"></p>
+    <button class="btn primary" type="submit" id="lSubmit">دخول</button>
+    <div class="or">أو</div>
+    <button class="btn" type="button" id="lMagic">أرسل لي رابط دخول على بريدي</button>
+    <p class="gate-foot">الدخول للفريق فقط. لطلب حساب تواصل مع مدير البوابة.</p>
+  </form>
+</main>
+
+<main class="gate" id="deniedView" hidden>
+  <div class="gate-card">
+    <img class="mark" src="img/favicon.png" alt="" aria-hidden="true">
+    <h1>لا تملك صلاحية الدخول بعد</h1>
+    <p>الحساب <b id="deniedEmail" dir="ltr"></b> غير مضاف لفريق البوابة. اطلب من مدير البوابة إضافته، ثم أعد فتح الصفحة.</p>
+    <button class="btn" type="button" id="deniedOut">تسجيل الخروج</button>
+  </div>
+</main>
+
+<div id="appView" hidden>
+<div class="app" dir="rtl" lang="ar">
+  <header class="top">
+    <div>
+      <nav class="crumbs" id="crumbs" aria-label="التنقل" hidden>
+        <button type="button" class="crumb" id="homeBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>كل العملاء</button>
+      </nav>
+      <h1 id="pageTitle">كروت المحتوى</h1>
+      <p id="pageSub">بطاقة تعريفية لكل عنصر في محتوى صفحات السوشال ميديا</p>
+    </div>
+    <div class="top-actions">
+      <button class="btn primary" id="newClientBtn" type="button" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        إضافة عميل
+      </button>
+      <button class="btn" id="clientEditBtn" type="button" hidden>إعدادات العميل</button>
+      <div class="views" id="views" role="group" aria-label="طريقة العرض">
+        <button type="button" data-view="weeks" aria-pressed="true">حسب الأسابيع</button>
+        <button type="button" data-view="all" aria-pressed="false">كل البطاقات</button>
+      </div>
+      <button class="btn primary" id="newBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        بطاقة جديدة
+      </button>
+    </div>
+  </header>
+
+  <div class="note" id="note" hidden></div>
+  <section class="clients" id="home" aria-label="العملاء" hidden></section>
+
+  <div class="ws" id="ws" hidden>
+  <div class="summary" id="summary" aria-live="polite"></div>
+
+  <div class="filters" id="filters">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="text" id="q" placeholder="ابحث في العناوين والنصوص" aria-label="بحث">
+    </div>
+    <div class="fgroup" id="fFormat"><span class="lbl">الفورمات</span></div>
+    <div class="fgroup" id="fCat"><span class="lbl">التصنيف</span></div>
+    <div class="fgroup" id="fFun"><span class="lbl">القمع</span></div>
+    <select id="fPlat" aria-label="المنصة"></select>
+  </div>
+
+  <div class="board" id="board" hidden></div>
+  <div class="week-head" id="weekHead" hidden></div>
+  <div class="grid" id="grid"></div>
+  </div>
+</div>
+</div>
+
+<dialog id="cdlg" class="small" dir="rtl" lang="ar" aria-labelledby="cdlgTitle">
+  <form class="sheet" id="cform" novalidate>
+    <div class="sheet-head"><h2 id="cdlgTitle">عميل جديد</h2></div>
+    <div class="sheet-body">
+      <div class="field">
+        <label for="cName">اسم العميل</label>
+        <input type="text" id="cName" maxlength="60" placeholder="مثال: ليتيليا" autocomplete="off">
+        <p class="hint">لكل عميل بطاقاته ولوحة أسابيعه الخاصة، وترقيم بطاقاته يبدأ من #001</p>
+      </div>
+      <p class="err" id="cErr" hidden></p>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn primary" type="submit" id="cSave">حفظ</button>
+      <button class="btn" type="button" id="cCancel">إلغاء</button>
+      <span class="spacer"></span>
+      <span id="cDelWrap"></span>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg" dir="rtl" lang="ar" aria-labelledby="dlgTitle">
+  <form class="sheet" id="form" novalidate>
+    <div class="sheet-head">
+      <h2 id="dlgTitle">بطاقة جديدة</h2>
+      <span class="code" id="dlgCode"></span>
+    </div>
+    <div class="sheet-body">
+      <div class="field">
+        <label for="fTitle">عنوان المحتوى</label>
+        <input type="text" id="fTitle" maxlength="140" placeholder="مثال: جولة داخل الشقة النموذجية">
+      </div>
+
+      <div class="row3">
+        <div class="field">
+          <label for="fClient">العميل</label>
+          <select id="fClient"></select>
+        </div>
+        <div class="field">
+          <label for="fTiming">التوقيت</label>
+          <input type="text" id="fTiming" maxlength="40" placeholder="مثال: W2 أو الشهر الأول">
+        </div>
+        <div class="field">
+          <label for="fPillar">المحور</label>
+          <input type="text" id="fPillar" maxlength="100" placeholder="مثال: الافتتاح">
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="flabel" id="lblFormat">نوع الفورمات</span>
+        <div class="seg" role="radiogroup" aria-labelledby="lblFormat" id="segFormat"></div>
+      </div>
+
+      <div class="field">
+        <span class="flabel" id="lblCat">تصنيف المحتوى</span>
+        <div class="seg cats" role="radiogroup" aria-labelledby="lblCat" id="segCat"></div>
+      </div>
+
+      <div class="field">
+        <span class="flabel" id="lblFun">مرحلة القمع التسويقي</span>
+        <p class="hint" id="funHint">ما الذي يجب أن يفعله هذا المحتوى للمتابع؟</p>
+        <div class="seg funnel" role="radiogroup" aria-labelledby="lblFun" id="segFun"></div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="fDuration">المدة</label>
+          <input type="text" id="fDuration" maxlength="60" placeholder="مثال: 30 ثانية">
+          <p class="hint" id="durHint">للفيديو بالثواني، وللكاروسيل عدد الشرائح، وللستوري عدد الستوريات</p>
+        </div>
+        <div class="field">
+          <label for="fExample">المثال</label>
+          <input type="text" id="fExample" maxlength="400" placeholder="رابط مرجعي أو وصف قصير للمثال">
+          <p class="hint">ضع رابط فيديو أو بوست مشابه، أو اكتب وصفه</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="fScript">المحتوى المكتوب</label>
+        <p class="hint" id="scriptHint"></p>
+        <textarea id="fScript" maxlength="8000"></textarea>
+      </div>
+
+      <div class="field">
+        <span class="flabel" id="lblPlat">المنصات المنشور عليها</span>
+        <div class="seg plats-pick" role="group" aria-labelledby="lblPlat" id="segPlat"></div>
+      </div>
+      <p class="err" id="formErr" hidden></p>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn primary" type="submit" id="saveBtn">حفظ البطاقة</button>
+      <button class="btn" type="button" id="cancelBtn">إلغاء</button>
+      <span class="spacer"></span>
+      <span id="delWrap"></span>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(() => {
+  const FORMATS = [
+    { id: "image", label: "بوست صورة", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.7"/><path d="m4 18 5-5 4 4 3-3 4 4"/></svg>' },
+    { id: "video", label: "بوست فيديو", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 9v6l5-3z" fill="currentColor"/></svg>' },
+    { id: "carousel", label: "كاروسيل", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="7" y="4" width="14" height="14" rx="2"/><path d="M4 7v12a1 1 0 0 0 1 1h12"/></svg>' },
+    { id: "story", label: "ستوري", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M9 6h6" stroke-linecap="round"/><circle cx="12" cy="13" r="3"/></svg>' },
+  ];
+  const CATS = [
+    { id: "BGC", label: "محتوى العلامة", desc: "ما تنتجه العلامة رسمياً" },
+    { id: "EGC", label: "محتوى الموظفين", desc: "من موظفي العلامة نفسها بأسلوب طبيعي" },
+    { id: "IGC", label: "محتوى المؤثرين", desc: "من مؤثر مستقل بصوته الخاص، ثقته من استقلاليته لا من جودة الإنتاج" },
+    { id: "PGC", label: "محتوى احترافي", desc: "إنتاج احترافي بتكليف مباشر (استوديو أو مصوّر)" },
+  ];
+  const FUNNEL = [
+    { id: "TOFU", label: "الوعي", desc: "أعلى القمع: الوصول لجمهور جديد والتعريف بالعلامة" },
+    { id: "MOFU", label: "الاهتمام والتقييم", desc: "وسط القمع: بناء الثقة وشرح القيمة لمن يعرف العلامة" },
+    { id: "BOFU", label: "القرار", desc: "أسفل القمع: دفع المهتم للحجز أو الزيارة أو التواصل" },
+  ];
+  const funOf = (id) => FUNNEL.find((f) => f.id === id);
+  const funLevel = (id) => `<span class="lv" aria-hidden="true">${FUNNEL.map((f) => `<i${f.id === id ? ' class="on"' : ""}></i>`).join("")}</span>`;
+  const PLATFORMS = ["انستقرام", "تيك توك", "سناب شات", "إكس", "يوتيوب", "فيسبوك", "لينكدإن", "ثريدز"];
+  const SCRIPT_HINT = {
+    image: "النص الذي سيظهر على التصميم، والكابشن المرافق للبوست",
+    video: "ما سيُقال في الفيديو (السكربت)، والنصوص التي ستظهر على الشاشة",
+    carousel: "نص كل شريحة بالترتيب، شريحة في كل سطر أو فقرة، ثم الكابشن",
+    story: "نص كل ستوري بالترتيب، وأي ملصق تفاعلي (استطلاع، صندوق أسئلة، عدّ تنازلي)",
+  };
+  const DUR_PH = { image: "لا ينطبق", video: "مثال: 30 ثانية", carousel: "مثال: 6 شرائح", story: "مثال: 8 ستوريات" };
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fmtOf = (id) => FORMATS.find((f) => f.id === id);
+  const catOf = (id) => CATS.find((c) => c.id === id);
+  const codeOf = (n) => "#" + String(n || 0).padStart(3, "0");
+
+  let cards = [];
+  let clients = [];
+  let mode = "loading"; // loading | db | local
+  let col = null, colClients = null;
+  let canWrite = true;
+  let editing = null, editingClient = null;
+  const filter = { q: "", format: "", cat: "", fun: "", plat: "" };
+
+  /* ---------- clients ---------- */
+  const lsGet = (k) => { try { return localStorage.getItem(k) || ""; } catch { return ""; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+  const NONE = "__none";
+  let current = lsGet("cc-client"); // "" = clients home
+  const norm = (s) => String(s || "").trim().replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/\s+/g, " ").toLowerCase();
+  const clientById = (id) => clients.find((c) => c.id === id);
+  // a card belongs to its clientId; older cards without one are matched by client name (spelling-tolerant)
+  function cidOf(card) {
+    if (card.clientId && clientById(card.clientId)) return card.clientId;
+    const n = norm(card.client);
+    const m = n ? clients.find((c) => norm(c.name) === n) : null;
+    return m ? m.id : "";
+  }
+  const cardsOf = (id) => cards.filter((c) => (cidOf(c) || NONE) === id);
+  const sortedClients = () => [...clients].sort((a, b) => String(a.name).localeCompare(String(b.name), "ar"));
+  const dateFmt = (() => { try { return new Intl.DateTimeFormat("ar-u-ca-gregory-nu-latn", { day: "numeric", month: "long" }); } catch { return null; } })();
+
+  /* ---------- weeks ---------- */
+  let view = lsGet("cc-view") === "all" ? "all" : "weeks";
+  let slot = "";
+  const ORD = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+  const monthName = (i) => "الشهر " + (ORD[i - 1] || i);
+  // "W3" → ["w3"], "W8-9" → ["w8","w9"], "الشهر الثاني" → ["m2"], anything else → ["none"]
+  function slotsOf(timing) {
+    const t = String(timing || "").trim();
+    let m = t.match(/W\s*(\d+)(?:\s*[-–—]\s*W?\s*(\d+))?/i) || t.match(/الأسبوع\s*(\d+)(?:\s*[-–—]\s*(\d+))?/);
+    if (m && +m[1] >= 1) {
+      const a = +m[1], b = Math.min(Math.max(+(m[2] || a), a), a + 8);
+      const out = []; for (let i = a; i <= b; i++) out.push("w" + i); return out;
+    }
+    m = t.match(new RegExp("الشهر\\s*(" + ORD.join("|") + "|\\d+)"));
+    if (m) { const i = ORD.indexOf(m[1]); const n = i >= 0 ? i + 1 : +m[1]; if (n >= 1) return ["m" + n]; }
+    return ["none"];
+  }
+  const monthOfWeek = (w) => Math.ceil(w / 4);
+  function slotInfo(s) {
+    if (s === "none") return { code: "غير مجدول", name: "بدون توقيت محدد", sub: "بطاقات لم يُحدد لها أسبوع. اكتب الأسبوع في خانة التوقيت (مثل W3) لتنتقل إلى مربعه", timing: "" };
+    const n = +s.slice(1);
+    if (s[0] === "m") return { code: "طوال الشهر", name: monthName(n) + " كاملاً", sub: "محتوى مجدول على مستوى الشهر بدون أسبوع محدد", timing: monthName(n) };
+    return { code: "W" + n, name: "الأسبوع " + n, sub: monthName(monthOfWeek(n)), timing: "W" + n };
+  }
+  const plural = (n) => (n === 1 ? "بطاقة" : n === 2 ? "بطاقتان" : n <= 10 ? "بطاقات" : "بطاقة");
+
+  /* ---------- storage: Supabase (Postgres + Auth + Realtime) ---------- */
+  const SB_URL = "https://xpdooukyrvdbtxogfigf.supabase.co";
+  const SB_KEY = "sb_publishable_bc_i5NkbKSSyQyoweaGTEA_2ArcEhnH"; // publishable key: safe in the browser; access is enforced by row-level security
+  const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+  let session = null, liveChannel = null, refetchTimer = null;
+
+  const cardIn = (r) => ({
+    id: r.id, clientId: r.client_id, no: r.no, title: r.title, format: r.format, category: r.category, funnel: r.funnel || "",
+    timing: r.timing, pillar: r.pillar, duration: r.duration, example: r.example, script: r.script, platforms: r.platforms || [],
+    createdAt: r.created_at, updatedAt: r.updated_at,
+  });
+  const cardOut = (c) => ({
+    client_id: c.clientId, no: c.no, title: c.title, format: c.format, category: c.category, funnel: c.funnel || null,
+    timing: c.timing, pillar: c.pillar, duration: c.duration, example: c.example, script: c.script, platforms: c.platforms,
+  });
+  const clientIn = (r) => ({ id: r.id, name: r.name, createdAt: r.created_at, updatedAt: r.updated_at });
+
+  function showNote(text) { const n = $("note"); n.textContent = text; n.hidden = !text; }
+  function showView(v) { // "boot" | "login" | "denied" | "app"
+    $("loginView").hidden = v !== "login";
+    $("deniedView").hidden = v !== "denied";
+    $("appView").hidden = v !== "app";
+    $("userBox").hidden = !(v === "app" || v === "denied");
+  }
+
+  async function fetchAll() {
+    const [cl, cd] = await Promise.all([
+      sb.from("clients").select("*").order("name"),
+      sb.from("cards").select("*").order("no"),
+    ]);
+    if (cl.error || cd.error) throw cl.error || cd.error;
+    clients = cl.data.map(clientIn);
+    cards = cd.data.map(cardIn);
+  }
+  const refetchSoon = () => { clearTimeout(refetchTimer); refetchTimer = setTimeout(() => fetchAll().then(render).catch(() => {}), 250); };
+
+  async function startApp() {
+    const email = (session.user.email || "").toLowerCase();
+    $("userEmail").textContent = email;
+    const { data: me, error } = await sb.from("members").select("role").eq("email", email).maybeSingle();
+    if (error || !me) { mode = "loading"; showView("denied"); $("deniedEmail").textContent = email; return; }
+    canWrite = me.role === "editor";
+    showView("app");
+    mode = "loading"; render();
+    const timer = setTimeout(() => { if (mode === "loading") showNote("لم تصل البيانات بعد. تحقق من الاتصال، وستظهر تلقائياً عند وصولها."); }, 10000);
+    try {
+      await fetchAll();
+      mode = "db";
+      clearTimeout(timer);
+      showNote(canWrite ? "" : "عرض فقط: حسابك بصلاحية مشاهدة، ولا يمكنه تعديل البطاقات.");
+    } catch {
+      clearTimeout(timer); mode = "db";
+      showNote("تعذّر تحميل البيانات الآن. أعد فتح الصفحة لاحقاً.");
+    }
+    render();
+    // live updates from teammates
+    if (liveChannel) sb.removeChannel(liveChannel);
+    liveChannel = sb.channel("cards-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "cards" }, refetchSoon)
+      .on("postgres_changes", { event: "*", schema: "public", table: "clients" }, refetchSoon)
+      .subscribe();
+  }
+
+  async function init() {
+    showView("boot");
+    const { data } = await sb.auth.getSession();
+    session = data.session;
+    if (session) await startApp(); else showView("login");
+    sb.auth.onAuthStateChange((evt, s) => {
+      const had = !!session;
+      session = s;
+      if (evt === "SIGNED_OUT" || !s) { cards = []; clients = []; if (liveChannel) { sb.removeChannel(liveChannel); liveChannel = null; } showView("login"); return; }
+      if (!had && s) startApp();
+    });
+  }
+
+  const sbErr = (e) => { if (e) throw e; };
+  async function persist(card) {
+    const { id } = card;
+    const row = cardOut(card);
+    if (id) sbErr((await sb.from("cards").update(row).eq("id", id)).error);
+    else sbErr((await sb.from("cards").insert(row)).error);
+    await fetchAll(); render();
+  }
+  async function remove(id) {
+    sbErr((await sb.from("cards").delete().eq("id", id)).error);
+    await fetchAll(); render();
+  }
+  async function persistClient(cl) {
+    if (cl.id) {
+      sbErr((await sb.from("clients").update({ name: cl.name }).eq("id", cl.id)).error);
+      await fetchAll(); render();
+      return cl.id;
+    }
+    const { data, error } = await sb.from("clients").insert({ name: cl.name }).select("id").single();
+    sbErr(error);
+    await fetchAll(); render();
+    return data.id;
+  }
+  async function removeClient(id) {
+    sbErr((await sb.from("clients").delete().eq("id", id)).error);
+    await fetchAll(); render();
+  }
+
+  /* ---------- sign-in ---------- */
+  const redirectTo = location.origin + location.pathname;
+  function loginMsg(t, ok) { const m = $("loginMsg"); m.textContent = t; m.hidden = !t; m.classList.toggle("ok", !!ok); }
+  $("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = $("lEmail").value.trim().toLowerCase();
+    const password = $("lPass").value;
+    if (!email) { loginMsg("اكتب بريدك الإلكتروني."); $("lEmail").focus(); return; }
+    if (!password) { loginMsg("اكتب كلمة المرور، أو اطلب رابط دخول على بريدك."); $("lPass").focus(); return; }
+    $("lSubmit").disabled = true; loginMsg("");
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    $("lSubmit").disabled = false;
+    if (error) loginMsg(/invalid/i.test(error.message) ? "البريد أو كلمة المرور غير صحيحة." : "تعذّر تسجيل الدخول الآن. حاول مرة أخرى.");
+  });
+  $("lMagic").addEventListener("click", async () => {
+    const email = $("lEmail").value.trim().toLowerCase();
+    if (!email) { loginMsg("اكتب بريدك الإلكتروني أولاً."); $("lEmail").focus(); return; }
+    $("lMagic").disabled = true; loginMsg("");
+    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: redirectTo } });
+    $("lMagic").disabled = false;
+    if (error) loginMsg(/rate|seconds/i.test(error.message) ? "طلبت روابط كثيرة. انتظر قليلاً ثم حاول مرة أخرى." : "تعذّر إرسال الرابط. تأكد أن بريدك مضاف للفريق، أو ادخل بكلمة المرور.");
+    else loginMsg("أرسلنا رابط الدخول إلى بريدك. افتحه من هذا الجهاز.", true);
+  });
+  const signOut = async () => { await sb.auth.signOut(); goHome(); };
+  $("signOutBtn").addEventListener("click", signOut);
+  $("deniedOut").addEventListener("click", signOut);
+  // numbering is per client: each client's cards start at #001
+  const nextNo = (cid) => cards.filter((c) => cidOf(c) === cid).reduce((m, c) => Math.max(m, c.no || 0), 0) + 1;
+
+  function openClient(id) {
+    current = id; lsSet("cc-client", id);
+    slot = lsGet("cc-slot:" + id);
+    filter.q = ""; filter.format = ""; filter.cat = ""; filter.fun = ""; filter.plat = "";
+    $("q").value = ""; $("fPlat").value = ""; syncChips();
+    render();
+    window.scrollTo(0, 0);
+  }
+  function goHome() { current = ""; lsSet("cc-client", ""); render(); window.scrollTo(0, 0); }
+
+  /* ---------- filters ---------- */
+  function buildFilters() {
+    const ff = $("fFormat");
+    ff.insertAdjacentHTML("beforeend", FORMATS.map((f) => `<button type="button" class="chip" data-format="${f.id}" aria-pressed="false">${f.label}</button>`).join(""));
+    const fc = $("fCat");
+    fc.insertAdjacentHTML("beforeend", CATS.map((c) => `<button type="button" class="chip" data-cat="${c.id}" aria-pressed="false" title="${esc(c.label)}">${c.id}</button>`).join(""));
+    const fu = $("fFun");
+    fu.insertAdjacentHTML("beforeend", FUNNEL.map((f) => `<button type="button" class="chip" data-fun="${f.id}" aria-pressed="false" title="${esc(f.label)}">${f.id}</button>`).join(""));
+    fu.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-fun]"); if (!b) return;
+      filter.fun = filter.fun === b.dataset.fun ? "" : b.dataset.fun; syncChips(); render();
+    });
+    $("fPlat").innerHTML = `<option value="">كل المنصات</option>` + PLATFORMS.map((p) => `<option value="${esc(p)}">${esc(p)}</option>`).join("");
+
+    ff.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-format]"); if (!b) return;
+      filter.format = filter.format === b.dataset.format ? "" : b.dataset.format; syncChips(); render();
+    });
+    fc.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-cat]"); if (!b) return;
+      filter.cat = filter.cat === b.dataset.cat ? "" : b.dataset.cat; syncChips(); render();
+    });
+    $("fPlat").addEventListener("change", (e) => { filter.plat = e.target.value; render(); });
+    $("q").addEventListener("input", (e) => { filter.q = e.target.value.trim(); render(); });
+  }
+  function syncChips() {
+    document.querySelectorAll("[data-format]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.format === filter.format)));
+    document.querySelectorAll("#fCat [data-cat]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.cat === filter.cat)));
+    document.querySelectorAll("#fFun [data-fun]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.fun === filter.fun)));
+  }
+
+  /* ---------- render ---------- */
+  function exampleHTML(v) {
+    if (!v) return '<span class="dim">—</span>';
+    if (/^https?:\/\/\S+$/i.test(v.trim())) return `<a href="${esc(v.trim())}" target="_blank" rel="noopener noreferrer">${esc(v.trim())}</a>`;
+    return esc(v);
+  }
+  function cardHTML(c, sample = false) {
+    const f = fmtOf(c.format) || FORMATS[0];
+    const cat = catOf(c.category);
+    const plats = (c.platforms || []).length
+      ? `<div class="plats">${c.platforms.map((p) => `<span class="plat">${esc(p)}</span>`).join("")}</div>`
+      : '<span class="dim">لم تُحدد</span>';
+    return `
+    <article class="card" data-id="${esc(c.id || "")}">
+      <div class="slate ${cat ? "cat-" + cat.id : ""}">
+        <span class="code">${codeOf(c.no)}${current === NONE && c.client ? `<small dir="rtl">${esc(c.client)}</small>` : ""}</span>
+        <span class="cat">${cat ? `${esc(cat.label)} <b>${cat.id}</b>` : "بدون تصنيف"}</span>
+      </div>
+      <div class="card-body">
+        <h3>${c.title ? esc(c.title) : '<span class="dim">بدون عنوان</span>'}</h3>
+        <dl class="facts">
+          <dt>القمع</dt><dd>${funOf(c.funnel) ? `<span class="fun" title="${esc(funOf(c.funnel).desc)}">${funLevel(c.funnel)}<b>${c.funnel}</b><small>${esc(funOf(c.funnel).label)}</small></span>` : '<span class="dim">لم تُحدد</span>'}</dd>
+          <dt>الفورمات</dt><dd><span class="fmt">${f.icon}${f.label}</span></dd>
+          ${c.pillar ? `<dt>المحور</dt><dd>${esc(c.pillar)}</dd>` : ""}
+          ${c.timing ? `<dt>التوقيت</dt><dd>${esc(c.timing)}</dd>` : ""}
+          <dt>المدة</dt><dd>${c.duration ? esc(c.duration) : '<span class="dim">—</span>'}</dd>
+          <dt>المنصات</dt><dd>${plats}</dd>
+          <dt>المثال</dt><dd>${exampleHTML(c.example)}</dd>
+        </dl>
+        <div class="script-lbl">المحتوى المكتوب</div>
+        <div class="script">${c.script ? esc(c.script) : '<span class="dim">لم يُكتب بعد</span>'}</div>
+      </div>
+      ${sample ? "" : `<div class="card-foot">
+        ${canWrite ? `<button class="btn ghost" type="button" data-act="edit">تعديل</button>` : `<button class="btn ghost" type="button" data-act="edit">عرض</button>`}
+        <button class="btn ghost" type="button" data-act="copy">نسخ كنص</button>
+        ${canWrite ? `<button class="btn ghost" type="button" data-act="dup">تكرار</button>` : ""}
+      </div>`}
+    </article>`;
+  }
+
+  const SAMPLE = {
+    no: 1, title: "جولة سريعة داخل الشقة النموذجية", format: "video", category: "EGC", funnel: "MOFU", duration: "45 ثانية",
+    platforms: ["انستقرام", "تيك توك", "سناب شات"], example: "فيديو جولة بعين موظف المبيعات، لقطات قريبة وحركة سريعة",
+    script: "مرحباً، أنا سارة من فريق المبيعات، وخذوا معي جولة في الشقة النموذجية…\nنص على الشاشة: ٣ غرف · إطلالة مفتوحة · تسليم فوري",
+  };
+
+  const funText = (list) => FUNNEL.map((f) => `${f.id[0]}<b>${list.filter((c) => c.funnel === f.id).length}</b>`).join(" · ");
+  const catBar = (list) => CATS.map((c) => [c, list.filter((x) => x.category === c.id).length]).filter((x) => x[1])
+    .map(([c, k]) => `<i style="flex:${k};background:var(--${c.id.toLowerCase()})" title="${c.id}"></i>`).join("");
+  const plusIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+
+  function renderHome() {
+    $("pageTitle").textContent = "كروت المحتوى";
+    $("pageSub").textContent = "اختر عميلاً لفتح بطاقاته ولوحة أسابيعه";
+    const home = $("home");
+    home.hidden = false;
+    const orphans = cardsOf(NONE);
+    const tiles = sortedClients().map((cl) => {
+      const list = cardsOf(cl.id);
+      const last = list.reduce((m, c) => (c.updatedAt > m ? c.updatedAt : m), "");
+      const when = last && dateFmt ? dateFmt.format(new Date(last)) : "";
+      const fm = FORMATS.map((f) => [f, list.filter((c) => c.format === f.id).length]).filter((x) => x[1]);
+      return `<button type="button" class="ct" data-client="${esc(cl.id)}">
+        <span class="ct-head"><span class="ct-mark" aria-hidden="true">${esc(String(cl.name || "؟").trim().charAt(0))}</span>
+          <span><span class="ct-name">${esc(cl.name)}</span><br><span class="ct-n">${list.length ? `<b>${list.length}</b> ${plural(list.length)}` : "لا بطاقات بعد"}</span></span></span>
+        ${list.length ? `<span class="wk-fmts">${fm.map(([f, k]) => `<span title="${esc(f.label)}">${f.icon}${k}</span>`).join("")}</span>
+        <span class="wk-fun" title="مراحل القمع">${funText(list)}</span>` : ""}
+        ${when ? `<span class="ct-meta">آخر تحديث ${esc(when)}</span>` : ""}
+        ${list.length ? `<span class="bar" aria-hidden="true">${catBar(list)}</span>` : ""}
+      </button>`;
+    });
+    if (orphans.length) tiles.push(`<button type="button" class="ct orphan" data-client="${NONE}">
+        <span class="ct-head"><span class="ct-mark" aria-hidden="true">؟</span><span><span class="ct-name">بطاقات بلا عميل</span><br><span class="ct-n"><b>${orphans.length}</b> ${plural(orphans.length)}</span></span></span>
+        <span class="ct-meta">افتح البطاقة واختر لها عميلاً من خانة «العميل»</span>
+      </button>`);
+    if (canWrite) tiles.push(`<button type="button" class="ct add" data-add-client>${plusIcon}إضافة عميل</button>`);
+    home.innerHTML = tiles.join("") || `<div class="note">لا يوجد عملاء بعد.</div>`;
+  }
+
+  function render() {
+    const loading = mode === "loading";
+    if (!loading && current && current !== NONE && !clientById(current)) current = "";
+    if (!loading && current === NONE && !cardsOf(NONE).length) current = "";
+    const inClient = !loading && !!current;
+    const cl = clientById(current);
+    $("crumbs").hidden = !inClient;
+    $("newClientBtn").hidden = loading || inClient || !canWrite;
+    $("clientEditBtn").hidden = !inClient || !cl || !canWrite;
+    $("newBtn").hidden = !inClient || current === NONE || !canWrite;
+    $("home").hidden = true;
+    $("ws").hidden = !inClient;
+    $("views").hidden = !inClient;
+    if (loading) { $("pageTitle").textContent = "كروت المحتوى"; $("pageSub").textContent = "جارٍ التحميل…"; return; }
+    if (!inClient) { renderHome(); return; }
+
+    $("pageTitle").textContent = cl ? cl.name : "بطاقات بلا عميل";
+    $("pageSub").textContent = cl ? "لوحة المحتوى وبطاقات العميل" : "بطاقات لا ترتبط بأي عميل. افتح كل بطاقة واختر عميلها";
+    const scoped = cardsOf(current);
+    const counts = Object.fromEntries(CATS.map((c) => [c.id, 0]));
+    scoped.forEach((c) => { if (counts[c.category] !== undefined) counts[c.category]++; });
+    $("summary").innerHTML =
+      `<span><b>${scoped.length}</b> ${plural(scoped.length)}</span>` +
+      CATS.map((c) => `<span class="sum-cat"><span class="dot" style="background:var(--${c.id.toLowerCase()})"></span>${c.id} <b>${counts[c.id]}</b></span>`).join("") +
+      `<span class="sum-sep" aria-hidden="true"></span>` +
+      FUNNEL.map((f) => `<span class="sum-cat" title="${esc(f.desc)}">${funLevel(f.id)}${f.id} <b>${scoped.filter((c) => c.funnel === f.id).length}</b></span>`).join("") +
+      (scoped.some((c) => !funOf(c.funnel)) ? `<span class="sum-cat">بلا مرحلة <b>${scoped.filter((c) => !funOf(c.funnel)).length}</b></span>` : "");
+    $("newBtn").disabled = !canWrite;
+    $("filters").hidden = scoped.length === 0;
+    $("summary").hidden = scoped.length === 0;
+
+    document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
+    $("views").hidden = scoped.length === 0;
+    const grid = $("grid");
+    $("board").hidden = true; $("weekHead").hidden = true;
+    if (scoped.length === 0) {
+      grid.style.display = "block";
+      grid.innerHTML = `
+        <section class="empty">
+          <div>
+            <h2>لا توجد بطاقات لـ${esc(cl ? cl.name : "")} بعد</h2>
+            <p>كل قطعة محتوى في الخطة تأخذ بطاقة واحدة: عنوانها، فورماتها، تصنيفها، مدتها، مثال مرجعي، النص الذي سيُكتب أو يُقال، والمنصات التي ستُنشر عليها.</p>
+            <div class="cat-legend">
+              ${CATS.map((c) => `<b style="color:var(--${c.id.toLowerCase()})">${c.id}</b><span>${esc(c.label)}: ${esc(c.desc)}</span>`).join("")}
+            </div>
+            ${canWrite && cl ? `<button class="btn primary" type="button" id="firstBtn">أنشئ أول بطاقة</button>` : ""}
+          </div>
+          <div class="sample" aria-label="نموذج توضيحي لبطاقة">${cardHTML(SAMPLE, true)}</div>
+        </section>`;
+      $("firstBtn")?.addEventListener("click", () => openEditor(null));
+      return;
+    }
+    grid.style.display = "";
+    const q = filter.q.toLowerCase();
+    const list = scoped
+      .filter((c) => !filter.format || c.format === filter.format)
+      .filter((c) => !filter.cat || c.category === filter.cat)
+      .filter((c) => !filter.fun || c.funnel === filter.fun)
+      .filter((c) => !filter.plat || (c.platforms || []).includes(filter.plat))
+      .filter((c) => !q || [c.title, c.script, c.example, c.duration, c.pillar, c.timing, c.funnel].join(" ").toLowerCase().includes(q))
+      .sort((a, b) => (a.no || 0) - (b.no || 0));
+    if (view === "weeks") { renderWeeks(list, scoped); return; }
+    grid.innerHTML = list.length ? list.map((c) => cardHTML(c)).join("") : `<div class="note">لا توجد بطاقات تطابق هذا الفلتر.</div>`;
+  }
+
+  function renderWeeks(list, scoped) {
+    // structure comes from the client's cards so boxes stay put while filtering; counts come from the filtered list
+    let maxW = 0, maxM = 0, hasNone = false;
+    const spanMonths = new Set();
+    scoped.forEach((c) => slotsOf(c.timing).forEach((s) => {
+      if (s === "none") hasNone = true;
+      else if (s[0] === "w") maxW = Math.max(maxW, +s.slice(1));
+      else { maxM = Math.max(maxM, +s.slice(1)); spanMonths.add(+s.slice(1)); }
+    }));
+    const months = Math.max(3, Math.ceil(maxW / 4), maxM);
+    const rows = [];
+    for (let i = 1; i <= months; i++) {
+      const slots = [1, 2, 3, 4].map((k) => "w" + ((i - 1) * 4 + k));
+      if (spanMonths.has(i)) slots.push("m" + i);
+      rows.push({ title: monthName(i), range: `W${(i - 1) * 4 + 1}–W${i * 4}`, slots });
+    }
+    if (hasNone) rows.push({ title: "بدون أسبوع محدد", range: "", slots: ["none"] });
+    const order = rows.flatMap((r) => r.slots);
+
+    const groups = new Map();
+    list.forEach((c) => slotsOf(c.timing).forEach((s) => { if (!groups.has(s)) groups.set(s, []); groups.get(s).push(c); }));
+    if (!order.includes(slot)) slot = order.find((s) => groups.has(s)) || order[0];
+
+    const box = (s) => {
+      const items = groups.get(s) || [];
+      const n = items.length, info = slotInfo(s), wide = s[0] !== "w";
+      const fm = FORMATS.map((f) => [f, items.filter((c) => c.format === f.id).length]).filter((x) => x[1]);
+      const cc = CATS.map((c) => [c, items.filter((x) => x.category === c.id).length]).filter((x) => x[1]);
+      return `<button type="button" class="wk${n ? "" : " wk-none"}${wide ? " span" : ""}" data-slot="${s}" aria-pressed="${s === slot}" aria-label="${esc(info.name)}، ${n} ${plural(n)}">
+        <span class="wk-top"><span class="wk-code${wide ? " ar" : ""}">${esc(info.code)}</span><span class="wk-n">${n ? `<b>${n}</b> ${plural(n)}` : "فارغ"}</span></span>
+        ${n ? `<span class="wk-fmts">${fm.map(([f, k]) => `<span title="${esc(f.label)}">${f.icon}${k}</span>`).join("")}</span>` : `<span class="wk-fmts">لا يوجد محتوى</span>`}
+        ${n ? `<span class="wk-fun" title="مراحل القمع">${FUNNEL.map((f) => `${f.id[0]}<b>${items.filter((c) => c.funnel === f.id).length}</b>`).join(" · ")}</span>` : ""}
+        ${n ? `<span class="bar" aria-hidden="true">${cc.map(([c, k]) => `<i style="flex:${k};background:var(--${c.id.toLowerCase()})" title="${c.id}"></i>`).join("")}</span>` : ""}
+      </button>`;
+    };
+    const board = $("board");
+    board.hidden = false;
+    board.innerHTML = rows.map((r) => `<section class="month-row"><h2>${esc(r.title)}${r.range ? ` <small>${r.range}</small>` : ""}</h2><div class="weeks">${r.slots.map(box).join("")}</div></section>`).join("");
+
+    const sel = groups.get(slot) || [];
+    const info = slotInfo(slot);
+    const filtered = filter.q || filter.format || filter.cat || filter.fun || filter.plat;
+    const head = $("weekHead");
+    head.hidden = false;
+    head.innerHTML = `<div><h2>${esc(info.name)}</h2><p>${esc(info.sub)}</p></div><p>${sel.length ? `<b>${sel.length}</b> ${plural(sel.length)}${filtered ? " تطابق الفلتر" : ""}` : ""}</p>`;
+    $("grid").innerHTML = sel.length ? sel.map((c) => cardHTML(c)).join("")
+      : `<div class="note">${filtered ? "لا توجد بطاقات في هذا المربع تطابق الفلتر." : "لا يوجد محتوى في هذا المربع بعد." + (canWrite && info.timing ? " اضغط «بطاقة جديدة» وسيُملأ التوقيت تلقائياً." : "")}</div>`;
+  }
+
+  $("board").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-slot]"); if (!b) return;
+    const hadFocus = document.activeElement === b;
+    slot = b.dataset.slot; lsSet("cc-slot:" + current, slot);
+    render();
+    if (hadFocus) $("board").querySelector(`[data-slot="${slot}"]`)?.focus();
+    const r = $("weekHead").getBoundingClientRect();
+    if (r.top > window.innerHeight - 120) {
+      const smooth = window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
+      $("weekHead").scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+    }
+  });
+  $("views").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-view]"); if (!b) return;
+    view = b.dataset.view; lsSet("cc-view", view); render();
+  });
+
+  /* ---------- editor ---------- */
+  function buildForm() {
+    $("segFormat").innerHTML = FORMATS.map((f) => `<label><input type="radio" name="format" id="fmt-${f.id}" value="${f.id}"><span class="opt">${f.icon}${f.label}</span></label>`).join("");
+    $("segCat").innerHTML = CATS.map((c) => `<label class="cat-${c.id}"><input type="radio" name="category" id="cat-${c.id}" value="${c.id}"><span class="opt"><b>${c.id}</b><small>${esc(c.label)}</small></span></label>`).join("");
+    $("segFun").innerHTML = FUNNEL.map((f) => `<label title="${esc(f.desc)}"><input type="radio" name="funnel" id="fun-${f.id}" value="${f.id}"><span class="opt">${funLevel(f.id)}<span><b>${f.id}</b><small>${esc(f.label)}</small></span></span></label>`).join("");
+    $("segFun").addEventListener("change", syncFunHint);
+    $("segPlat").innerHTML = PLATFORMS.map((p, i) => `<label><input type="checkbox" name="platforms" id="plat-${i}" value="${esc(p)}"><span class="opt">${esc(p)}</span></label>`).join("");
+    $("segFormat").addEventListener("change", syncFormatHints);
+  }
+  function syncFunHint() {
+    const f = funOf(document.querySelector('input[name="funnel"]:checked')?.value);
+    $("funHint").textContent = f ? f.desc : "ما الذي يجب أن يفعله هذا المحتوى للمتابع؟";
+  }
+  function currentFormat() { return document.querySelector('input[name="format"]:checked')?.value || "video"; }
+  function syncFormatHints() {
+    const f = currentFormat();
+    $("scriptHint").textContent = SCRIPT_HINT[f];
+    $("fDuration").placeholder = DUR_PH[f];
+    $("fScript").placeholder = f === "story" ? "الستوري 1: …\nالستوري 2: …" : f === "carousel" ? "الشريحة 1: …\nالشريحة 2: …" : f === "video" ? "المشهد الأول: …\nالتعليق الصوتي: …" : "النص على التصميم: …\nالكابشن: …";
+  }
+
+  function openEditor(card, asCopy = false) {
+    editing = card && !asCopy ? card : null;
+    const c = card || { format: "video", category: "BGC", platforms: [], timing: view === "weeks" && slot ? slotInfo(slot).timing : "" };
+    const cid = editing ? cidOf(card) : current !== NONE ? current : (card ? cidOf(card) : "");
+    const sel = $("fClient");
+    sel.innerHTML = (cid ? "" : `<option value="">اختر العميل</option>`) +
+      sortedClients().map((x) => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+    sel.value = cid;
+    sel.dataset.orig = cid;
+    const no = editing ? editing.no : nextNo(cid);
+    $("dlgTitle").textContent = editing ? (canWrite ? "تعديل البطاقة" : "تفاصيل البطاقة") : asCopy ? "نسخة من بطاقة" : "بطاقة جديدة";
+    $("dlgCode").textContent = codeOf(no);
+    $("fTitle").value = asCopy ? (c.title ? c.title + " (نسخة)" : "") : c.title || "";
+    document.querySelectorAll('input[name="format"]').forEach((i) => (i.checked = i.value === (c.format || "video")));
+    document.querySelectorAll('input[name="category"]').forEach((i) => (i.checked = i.value === c.category));
+    document.querySelectorAll('input[name="funnel"]').forEach((i) => (i.checked = i.value === c.funnel));
+    syncFunHint();
+    $("fTiming").value = c.timing || "";
+    $("fPillar").value = c.pillar || "";
+    $("fDuration").value = c.duration || "";
+    $("fExample").value = c.example || "";
+    $("fScript").value = c.script || "";
+    document.querySelectorAll('input[name="platforms"]').forEach((i) => (i.checked = (c.platforms || []).includes(i.value)));
+    $("formErr").hidden = true;
+    $("form").querySelectorAll("input,textarea,select").forEach((el) => (el.disabled = !canWrite));
+    $("saveBtn").hidden = !canWrite;
+    renderDelete(false);
+    syncFormatHints();
+    $("dlg").showModal();
+    if (canWrite) $("fTitle").focus();
+  }
+  function renderDelete(confirming) {
+    const w = $("delWrap");
+    if (!editing || !canWrite) { w.innerHTML = ""; return; }
+    w.innerHTML = confirming
+      ? `<span class="confirm">حذف البطاقة نهائياً؟ <button class="btn danger solid" type="button" id="delYes">احذف</button><button class="btn ghost" type="button" id="delNo">تراجع</button></span>`
+      : `<button class="btn danger ghost" type="button" id="delBtn">حذف</button>`;
+    $("delBtn")?.addEventListener("click", () => renderDelete(true));
+    $("delNo")?.addEventListener("click", () => renderDelete(false));
+    $("delYes")?.addEventListener("click", async () => {
+      try { await remove(editing.id); $("dlg").close(); toast("حُذفت البطاقة"); }
+      catch { showErr("تعذّر حذف البطاقة. حاول مرة أخرى."); }
+    });
+  }
+  function showErr(t) { const e = $("formErr"); e.textContent = t; e.hidden = false; }
+
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!canWrite) return;
+    const title = $("fTitle").value.trim();
+    const category = document.querySelector('input[name="category"]:checked')?.value || "";
+    if (!title) { showErr("اكتب عنوان المحتوى قبل الحفظ."); $("fTitle").focus(); return; }
+    if (!category) { showErr("اختر تصنيف المحتوى: BGC أو EGC أو IGC أو PGC."); return; }
+    const funnel = document.querySelector('input[name="funnel"]:checked')?.value || "";
+    if (!funnel) { showErr("اختر مرحلة القمع التسويقي: TOFU أو MOFU أو BOFU."); return; }
+    const clientId = $("fClient").value;
+    const cl = clientById(clientId);
+    if (!cl) { showErr("اختر العميل الذي تتبع له البطاقة."); $("fClient").focus(); return; }
+    // a card moved to another client takes the next number in that client's series
+    const moved = editing && clientId !== $("fClient").dataset.orig;
+    const now = new Date().toISOString();
+    const card = {
+      ...(editing ? { id: editing.id } : {}),
+      no: editing && !moved ? editing.no : nextNo(clientId),
+      title, category, funnel,
+      format: currentFormat(),
+      clientId,
+      client: cl.name,
+      timing: $("fTiming").value.trim(),
+      pillar: $("fPillar").value.trim(),
+      duration: $("fDuration").value.trim(),
+      example: $("fExample").value.trim(),
+      script: $("fScript").value.replace(/\s+$/, ""),
+      platforms: [...document.querySelectorAll('input[name="platforms"]:checked')].map((i) => i.value),
+      createdAt: editing?.createdAt || now,
+      updatedAt: now,
+    };
+    $("saveBtn").disabled = true;
+    try {
+      await persist(card);
+      $("dlg").close();
+      toast(moved ? `نُقلت البطاقة إلى ${cl.name} برقم ${codeOf(card.no)}` : editing ? "حُفظت التعديلات" : "أُضيفت البطاقة " + codeOf(card.no));
+    } catch (err) {
+      showErr(err?.code === "quota_exceeded" ? "امتلأت مساحة التخزين. احذف بطاقات قديمة ثم أعد المحاولة." : "تعذّر حفظ البطاقة. تحقق من الاتصال وحاول مرة أخرى.");
+    } finally { $("saveBtn").disabled = false; }
+  });
+  $("cancelBtn").addEventListener("click", () => $("dlg").close());
+  $("newBtn").addEventListener("click", () => openEditor(null));
+  $("fClient").addEventListener("change", (e) => {
+    const v = e.target.value;
+    $("dlgCode").textContent = codeOf(editing && v === e.target.dataset.orig ? editing.no : nextNo(v));
+  });
+
+  /* ---------- clients: home, add, rename, delete ---------- */
+  $("home").addEventListener("click", (e) => {
+    if (e.target.closest("[data-add-client]")) { openClientEditor(null); return; }
+    const b = e.target.closest("[data-client]"); if (b) openClient(b.dataset.client);
+  });
+  $("homeBtn").addEventListener("click", goHome);
+  $("newClientBtn").addEventListener("click", () => openClientEditor(null));
+  $("clientEditBtn").addEventListener("click", () => openClientEditor(clientById(current)));
+  $("cCancel").addEventListener("click", () => $("cdlg").close());
+
+  function openClientEditor(cl) {
+    editingClient = cl || null;
+    $("cdlgTitle").textContent = cl ? "إعدادات العميل" : "عميل جديد";
+    $("cName").value = cl ? cl.name : "";
+    $("cErr").hidden = true;
+    renderClientDelete(false);
+    $("cdlg").showModal();
+    $("cName").focus();
+  }
+  function cErr(t) { $("cErr").textContent = t; $("cErr").hidden = false; }
+  function renderClientDelete(confirming) {
+    const w = $("cDelWrap");
+    if (!editingClient) { w.innerHTML = ""; return; }
+    const n = cardsOf(editingClient.id).length;
+    w.innerHTML = confirming
+      ? `<span class="confirm">حذف العميل نهائياً؟ <button class="btn danger solid" type="button" id="cDelYes">احذف</button><button class="btn ghost" type="button" id="cDelNo">تراجع</button></span>`
+      : `<button class="btn danger ghost" type="button" id="cDelBtn">حذف العميل</button>`;
+    $("cDelBtn")?.addEventListener("click", () => {
+      if (n) { cErr(`لا يمكن حذف عميل لديه بطاقات. احذف بطاقاته الـ${n} أو انقلها لعميل آخر أولاً.`); return; }
+      renderClientDelete(true);
+    });
+    $("cDelNo")?.addEventListener("click", () => renderClientDelete(false));
+    $("cDelYes")?.addEventListener("click", async () => {
+      const name = editingClient.name;
+      try { await removeClient(editingClient.id); $("cdlg").close(); goHome(); toast(`حُذف العميل ${name}`); }
+      catch { cErr("تعذّر حذف العميل. حاول مرة أخرى."); }
+    });
+  }
+  $("cform").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!canWrite) return;
+    const name = $("cName").value.trim().replace(/\s+/g, " ");
+    if (!name) { cErr("اكتب اسم العميل."); $("cName").focus(); return; }
+    const dup = clients.find((c) => norm(c.name) === norm(name) && c.id !== editingClient?.id);
+    if (dup) { cErr(`يوجد عميل بهذا الاسم: ${dup.name}`); return; }
+    const now = new Date().toISOString();
+    $("cSave").disabled = true;
+    try {
+      const id = await persistClient(editingClient
+        ? { ...editingClient, name, updatedAt: now }
+        : { name, createdAt: now, updatedAt: now });
+      $("cdlg").close();
+      if (editingClient) { toast("حُفظ اسم العميل"); render(); }
+      else { toast(`أُضيف العميل ${name}`); openClient(id); }
+    } catch {
+      cErr("تعذّر حفظ العميل. تحقق من الاتصال وحاول مرة أخرى.");
+    } finally { $("cSave").disabled = false; }
+  });
+
+  /* ---------- card actions ---------- */
+  function cardText(c) {
+    const f = fmtOf(c.format), cat = catOf(c.category);
+    return [
+      `بطاقة ${codeOf(c.no)}`,
+      `عنوان المحتوى: ${c.title || "—"}`,
+      `العميل: ${clientById(cidOf(c))?.name || c.client || "—"}`,
+      `التوقيت: ${c.timing || "—"}`,
+      `المحور: ${c.pillar || "—"}`,
+      `نوع الفورمات: ${f ? f.label : "—"}`,
+      `تصنيف المحتوى: ${cat ? cat.id + " (" + cat.label + ")" : "—"}`,
+      `مرحلة القمع: ${funOf(c.funnel) ? c.funnel + " (" + funOf(c.funnel).label + ")" : "—"}`,
+      `المدة: ${c.duration || "—"}`,
+      `المثال: ${c.example || "—"}`,
+      `المنصات: ${(c.platforms || []).join("، ") || "—"}`,
+      `المحتوى المكتوب:`,
+      c.script || "—",
+    ].join("\n");
+  }
+  $("grid").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const id = b.closest(".card")?.dataset.id;
+    const c = cards.find((x) => x.id === id); if (!c) return;
+    if (b.dataset.act === "edit") openEditor(c);
+    if (b.dataset.act === "dup") openEditor(c, true);
+    if (b.dataset.act === "copy") {
+      try { await navigator.clipboard.writeText(cardText(c)); toast("نُسخت البطاقة كنص"); }
+      catch { toast("تعذّر النسخ من هذا العرض"); }
+    }
+  });
+
+  let tt;
+  function toast(t) { const el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(tt); tt = setTimeout(() => (el.hidden = true), 2200); }
+
+  buildFilters();
+  buildForm();
+  init();
+})();
+</script>
+</body>
+</html>
