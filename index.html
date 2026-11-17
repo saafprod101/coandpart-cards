@@ -94,6 +94,27 @@ body { margin: 0; color: var(--ink); font-family: var(--f-body); font-size: 15px
 .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .gate-card .btn { justify-content: center; }
 .gate-foot { font-size: 12.5px; color: var(--muted); }
+
+/* Team dialog */
+.team-add { display: flex; flex-direction: column; gap: 12px; background: var(--surface-2); border-radius: 14px; padding: 16px; }
+.team-add h3, .team-h { font-size: 16px; font-weight: 700; }
+.team-h { margin-bottom: 8px; }
+.team-add .hint { margin: -6px 0 0; }
+.pw { display: flex; gap: 6px; }
+.pw input { flex: 1; min-width: 0; font-family: var(--f-mono); }
+.cred { border: 1px solid var(--egc); background: var(--egc-soft); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.cred pre { margin: 0; white-space: pre-wrap; font-family: var(--f-body); font-size: 14px; background: var(--surface); border-radius: 10px; padding: 10px 12px; overflow-wrap: anywhere; }
+.team-list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.tm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.tm:first-child { border-top: 0; }
+.tm .who { flex: 1 1 200px; min-width: 0; }
+.tm .who b { display: block; direction: ltr; text-align: end; overflow-wrap: anywhere; font-weight: 600; }
+.tm .who small { color: var(--muted); font-size: 12.5px; }
+.tm select { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 5px 8px; }
+.tm .btn { font-size: 13px; padding: 5px 10px; }
+.tm .inline { display: flex; gap: 6px; flex: 1 1 100%; align-items: center; }
+.tm .inline input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 10px; font-family: var(--f-mono); }
+.you { font-size: 11.5px; background: var(--ink); color: var(--bg); border-radius: 999px; padding: 0 8px; margin-inline-start: 6px; }
 .app {
   max-width: 1240px; margin: 0 auto;
   padding-block: 28px 64px;
@@ -356,6 +377,7 @@ dialog.small { width: min(460px, calc(100vw - 24px)); }
     <a class="brand" href="./" aria-label="Co & Part · كروت المحتوى"><img src="img/logo-primary.svg" alt="Co & Part"><span>كروت المحتوى</span></a>
     <div class="userbox" id="userBox" hidden>
       <span class="em" id="userEmail"></span>
+      <button type="button" class="btn-bar" id="teamBtn" hidden>الفريق</button>
       <button type="button" class="btn-bar" id="signOutBtn">تسجيل الخروج</button>
     </div>
   </div>
@@ -378,9 +400,7 @@ dialog.small { width: min(460px, calc(100vw - 24px)); }
     </div>
     <p class="gate-msg" id="loginMsg" hidden role="status"></p>
     <button class="btn primary" type="submit" id="lSubmit">دخول</button>
-    <div class="or">أو</div>
-    <button class="btn" type="button" id="lMagic">أرسل لي رابط دخول على بريدي</button>
-    <p class="gate-foot">الدخول للفريق فقط. لطلب حساب تواصل مع مدير البوابة.</p>
+    <p class="gate-foot">بيانات الدخول يصدرها مدير البوابة. إذا لم تصلك أو نسيت كلمة المرور، تواصل معه.</p>
   </form>
 </main>
 
@@ -443,6 +463,40 @@ dialog.small { width: min(460px, calc(100vw - 24px)); }
   </div>
 </div>
 </div>
+
+<dialog id="tdlg" dir="rtl" lang="ar" aria-labelledby="tdlgTitle">
+  <div class="sheet">
+    <div class="sheet-head"><h2 id="tdlgTitle">الفريق وبيانات الدخول</h2><button class="btn ghost" type="button" id="tClose">إغلاق</button></div>
+    <div class="sheet-body">
+      <form class="team-add" id="tForm" novalidate>
+        <h3>إضافة عضو</h3>
+        <p class="hint">أنت من يحدد البريد وكلمة المرور، ثم ترسلها للعضو ليدخل بها مباشرة.</p>
+        <div class="row3">
+          <div class="field"><label for="tEmail">البريد الإلكتروني</label><input type="email" id="tEmail" dir="ltr" autocomplete="off" placeholder="name@company.com"></div>
+          <div class="field">
+            <label for="tPass">كلمة المرور</label>
+            <div class="pw"><input type="text" id="tPass" dir="ltr" autocomplete="new-password" spellcheck="false"><button class="btn ghost" type="button" id="tGen" title="توليد كلمة مرور قوية">توليد</button></div>
+            <p class="hint">8 أحرف على الأقل</p>
+          </div>
+          <div class="field"><label for="tRole">الصلاحية</label>
+            <select id="tRole"><option value="editor">محرر: يضيف ويعدّل</option><option value="viewer">مشاهد فقط</option><option value="admin">مدير: يدير الفريق</option></select>
+          </div>
+        </div>
+        <p class="err" id="tErr" hidden></p>
+        <div><button class="btn primary" type="submit" id="tAdd">إضافة العضو</button></div>
+      </form>
+      <div class="cred" id="tCred" hidden>
+        <b>أُضيف العضو. أرسل له بيانات الدخول:</b>
+        <pre id="tCredText" dir="rtl"></pre>
+        <div><button class="btn" type="button" id="tCopy">نسخ بيانات الدخول</button></div>
+      </div>
+      <div>
+        <h3 class="team-h">الأعضاء</h3>
+        <div class="team-list" id="tList"><p class="hint">جارٍ التحميل…</p></div>
+      </div>
+    </div>
+  </div>
+</dialog>
 
 <dialog id="cdlg" class="small" dir="rtl" lang="ar" aria-labelledby="cdlgTitle">
   <form class="sheet" id="cform" novalidate>
@@ -635,7 +689,7 @@ dialog.small { width: min(460px, calc(100vw - 24px)); }
   const SB_URL = "https://xpdooukyrvdbtxogfigf.supabase.co";
   const SB_KEY = "sb_publishable_bc_i5NkbKSSyQyoweaGTEA_2ArcEhnH"; // publishable key: safe in the browser; access is enforced by row-level security
   const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
-  let session = null, liveChannel = null, refetchTimer = null;
+  let session = null, liveChannel = null, refetchTimer = null, isAdmin = false;
 
   const cardIn = (r) => ({
     id: r.id, clientId: r.client_id, no: r.no, title: r.title, format: r.format, category: r.category, funnel: r.funnel || "",
@@ -672,7 +726,9 @@ dialog.small { width: min(460px, calc(100vw - 24px)); }
     $("userEmail").textContent = email;
     const { data: me, error } = await sb.from("members").select("role").eq("email", email).maybeSingle();
     if (error || !me) { mode = "loading"; showView("denied"); $("deniedEmail").textContent = email; return; }
-    canWrite = me.role === "editor";
+    canWrite = me.role === "editor" || me.role === "admin";
+    isAdmin = me.role === "admin";
+    $("teamBtn").hidden = !isAdmin;
     showView("app");
     mode = "loading"; render();
     const timer = setTimeout(() => { if (mode === "loading") showNote("لم تصل البيانات بعد. تحقق من الاتصال، وستظهر تلقائياً عند وصولها."); }, 10000);
@@ -743,22 +799,111 @@ dialog.small { width: min(460px, calc(100vw - 24px)); }
     const email = $("lEmail").value.trim().toLowerCase();
     const password = $("lPass").value;
     if (!email) { loginMsg("اكتب بريدك الإلكتروني."); $("lEmail").focus(); return; }
-    if (!password) { loginMsg("اكتب كلمة المرور، أو اطلب رابط دخول على بريدك."); $("lPass").focus(); return; }
+    if (!password) { loginMsg("اكتب كلمة المرور التي وصلتك من مدير البوابة."); $("lPass").focus(); return; }
     $("lSubmit").disabled = true; loginMsg("");
     const { error } = await sb.auth.signInWithPassword({ email, password });
     $("lSubmit").disabled = false;
     if (error) loginMsg(/invalid/i.test(error.message) ? "البريد أو كلمة المرور غير صحيحة." : "تعذّر تسجيل الدخول الآن. حاول مرة أخرى.");
   });
-  $("lMagic").addEventListener("click", async () => {
-    const email = $("lEmail").value.trim().toLowerCase();
-    if (!email) { loginMsg("اكتب بريدك الإلكتروني أولاً."); $("lEmail").focus(); return; }
-    $("lMagic").disabled = true; loginMsg("");
-    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: redirectTo } });
-    $("lMagic").disabled = false;
-    if (error) loginMsg(/rate|seconds/i.test(error.message) ? "طلبت روابط كثيرة. انتظر قليلاً ثم حاول مرة أخرى." : "تعذّر إرسال الرابط. تأكد أن بريدك مضاف للفريق، أو ادخل بكلمة المرور.");
-    else loginMsg("أرسلنا رابط الدخول إلى بريدك. افتحه من هذا الجهاز.", true);
-  });
   const signOut = async () => { await sb.auth.signOut(); goHome(); };
+
+  /* ---------- team: admin issues logins (email + password) ---------- */
+  const ROLE_LABEL = { admin: "مدير", editor: "محرر", viewer: "مشاهد" };
+  const TEAM_ERR = {
+    exists: "هذا البريد مضاف للفريق من قبل.", bad_email: "البريد الإلكتروني غير صحيح.", weak_password: "كلمة المرور يجب أن تكون 8 أحرف على الأقل.",
+    bad_role: "اختر الصلاحية.", self_demote: "لا يمكنك تغيير صلاحيتك كمدير بنفسك.", self_remove: "لا يمكنك حذف حسابك.",
+    no_account: "لا يوجد حساب لهذا البريد.", not_admin: "هذه العملية للمدير فقط.", not_signed_in: "انتهت الجلسة. سجّل الدخول مرة أخرى.",
+  };
+  async function team(action, payload = {}) {
+    const { data, error } = await sb.functions.invoke("manage-team", { body: { action, ...payload } });
+    if (error) {
+      let code = "";
+      try { code = (await error.context.json()).error; } catch {}
+      throw new Error(TEAM_ERR[code] || "تعذّرت العملية. تحقق من الاتصال وحاول مرة أخرى.");
+    }
+    return data;
+  }
+  function genPassword() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    const a = new Uint32Array(12); crypto.getRandomValues(a);
+    return [...a].map((n) => chars[n % chars.length]).join("");
+  }
+  const credText = (email, password) => `بوابة كروت المحتوى · Co & Part\nالرابط: ${redirectTo}\nالبريد: ${email}\nكلمة المرور: ${password}`;
+  function tErr(t) { $("tErr").textContent = t; $("tErr").hidden = !t; }
+
+  async function loadTeam() {
+    const list = $("tList");
+    try {
+      const { me, members } = await team("list");
+      list.innerHTML = members.map((m) => `
+        <div class="tm" data-email="${esc(m.email)}">
+          <div class="who"><b>${esc(m.email)}${m.email === me ? '<span class="you">أنت</span>' : ""}</b>
+            <small>${m.hasAccount ? (m.lastSignIn && dateFmt ? "آخر دخول " + esc(dateFmt.format(new Date(m.lastSignIn))) : "لم يدخل بعد") : "بلا حساب دخول"}</small></div>
+          <select data-act="role" aria-label="صلاحية ${esc(m.email)}" ${m.email === me ? "disabled" : ""}>
+            ${Object.entries(ROLE_LABEL).map(([k, v]) => `<option value="${k}"${k === m.role ? " selected" : ""}>${v}</option>`).join("")}
+          </select>
+          <button class="btn ghost" type="button" data-act="pw">كلمة مرور جديدة</button>
+          ${m.email === me ? "" : `<button class="btn ghost danger" type="button" data-act="rm">حذف</button>`}
+        </div>`).join("") || '<p class="hint" style="padding:12px 14px;margin:0">لا يوجد أعضاء.</p>';
+    } catch (e) { list.innerHTML = `<p class="err" style="padding:12px 14px">${esc(e.message)}</p>`; }
+  }
+  $("teamBtn").addEventListener("click", () => {
+    tErr(""); $("tCred").hidden = true; $("tForm").reset(); $("tPass").value = genPassword();
+    $("tdlg").showModal(); loadTeam(); $("tEmail").focus();
+  });
+  $("tClose").addEventListener("click", () => $("tdlg").close());
+  $("tGen").addEventListener("click", () => { $("tPass").value = genPassword(); });
+  $("tForm").addEventListener("submit", async (e) => {
+    e.preventDefault(); tErr("");
+    const email = $("tEmail").value.trim().toLowerCase(), password = $("tPass").value.trim(), role = $("tRole").value;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { tErr(TEAM_ERR.bad_email); $("tEmail").focus(); return; }
+    if (password.length < 8) { tErr(TEAM_ERR.weak_password); $("tPass").focus(); return; }
+    $("tAdd").disabled = true;
+    try {
+      await team("create", { email, password, role });
+      $("tCredText").textContent = credText(email, password);
+      $("tCred").hidden = false;
+      $("tForm").reset(); $("tPass").value = genPassword();
+      loadTeam();
+    } catch (err) { tErr(err.message); }
+    finally { $("tAdd").disabled = false; }
+  });
+  $("tCopy").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText($("tCredText").textContent); toast("نُسخت بيانات الدخول"); }
+    catch { toast("تعذّر النسخ، انسخ النص يدوياً"); }
+  });
+  $("tList").addEventListener("change", async (e) => {
+    const sel = e.target.closest('[data-act="role"]'); if (!sel) return;
+    const email = sel.closest(".tm").dataset.email;
+    try { await team("role", { email, role: sel.value }); toast("حُدّثت الصلاحية"); } catch (err) { toast(err.message); loadTeam(); }
+  });
+  $("tList").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-act]"); if (!b || b.tagName === "SELECT") return;
+    const row = b.closest(".tm"), email = row.dataset.email, act = b.dataset.act;
+    if (act === "pw-save") {
+      const password = row.querySelector(".inline input")?.value.trim() || "";
+      if (password.length < 8) { toast(TEAM_ERR.weak_password); return; }
+      b.disabled = true;
+      try {
+        await team("password", { email, password });
+        row.querySelector(".inline")?.remove();
+        $("tCredText").textContent = credText(email, password); $("tCred").hidden = false;
+        toast("حُدّثت كلمة المرور. أرسل البيانات الجديدة للعضو");
+      } catch (err) { toast(err.message); b.disabled = false; }
+      return;
+    }
+    if (act === "rm-yes") {
+      b.disabled = true;
+      try { await team("remove", { email }); toast("حُذف العضو"); loadTeam(); } catch (err) { toast(err.message); b.disabled = false; }
+      return;
+    }
+    row.querySelector(".inline")?.remove();
+    if (act === "pw") {
+      row.insertAdjacentHTML("beforeend", `<div class="inline"><input type="text" dir="ltr" value="${genPassword()}" aria-label="كلمة المرور الجديدة" spellcheck="false"><button class="btn primary" type="button" data-act="pw-save">حفظ</button><button class="btn ghost" type="button" data-act="cancel">إلغاء</button></div>`);
+    } else if (act === "rm") {
+      row.insertAdjacentHTML("beforeend", `<div class="inline"><span class="confirm">حذف ${esc(email)} وإلغاء دخوله نهائياً؟ <button class="btn danger solid" type="button" data-act="rm-yes">احذف</button><button class="btn ghost" type="button" data-act="cancel">تراجع</button></span></div>`);
+    }
+  });
   $("signOutBtn").addEventListener("click", signOut);
   $("deniedOut").addEventListener("click", signOut);
   // numbering is per client: each client's cards start at #001
