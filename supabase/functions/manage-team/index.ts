@@ -72,16 +72,22 @@ Deno.serve(async (req: Request) => {
         if (!ROLES.includes(role)) return json({ error: "bad_role" }, 400);
         const { data: existingMember } = await admin.from("members").select("email").eq("email", email).maybeSingle();
         if (existingMember) return json({ error: "exists" }, 409);
-        const existingUser = await findUser(email);
-        if (existingUser) {
-          const { error } = await admin.auth.admin.updateUserById(existingUser.id, { password, email_confirm: true });
-          if (error) throw error;
-        } else {
-          const { error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
-          if (error) throw error;
-        }
+        // members row first: the database only allows accounts for emails already on the team list
         const { error: insErr } = await admin.from("members").insert({ email, role });
         if (insErr) throw insErr;
+        try {
+          const existingUser = await findUser(email);
+          if (existingUser) {
+            const { error } = await admin.auth.admin.updateUserById(existingUser.id, { password, email_confirm: true });
+            if (error) throw error;
+          } else {
+            const { error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+            if (error) throw error;
+          }
+        } catch (e) {
+          await admin.from("members").delete().eq("email", email);
+          throw e;
+        }
         return json({ ok: true });
       }
 

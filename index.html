@@ -402,6 +402,19 @@ dialog.small { width: min(460px, calc(100vw - 24px)); }
     <button class="btn primary" type="submit" id="lSubmit">دخول</button>
     <p class="gate-foot">بيانات الدخول يصدرها مدير البوابة. إذا لم تصلك أو نسيت كلمة المرور، تواصل معه.</p>
   </form>
+  <form class="gate-card" id="setupForm" novalidate hidden>
+    <img class="mark" src="img/favicon.png" alt="" aria-hidden="true">
+    <div>
+      <h1>إعداد حساب المدير</h1>
+      <p>خطوة لمرة واحدة: أنشئ حسابك كمدير للبوابة باستخدام رمز الإعداد، واختر كلمة المرور بنفسك.</p>
+    </div>
+    <div class="field"><label for="sEmail">بريد المدير</label><input type="email" id="sEmail" dir="ltr" autocomplete="username"></div>
+    <div class="field"><label for="sCode">رمز الإعداد</label><input type="text" id="sCode" dir="ltr" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX"></div>
+    <div class="field"><label for="sPass">كلمة المرور الجديدة</label><input type="password" id="sPass" dir="ltr" autocomplete="new-password"><p class="hint">8 أحرف على الأقل</p></div>
+    <div class="field"><label for="sPass2">تأكيد كلمة المرور</label><input type="password" id="sPass2" dir="ltr" autocomplete="new-password"></div>
+    <p class="gate-msg" id="setupMsg" hidden role="status"></p>
+    <button class="btn primary" type="submit" id="sSubmit">إنشاء حساب المدير والدخول</button>
+  </form>
 </main>
 
 <main class="gate" id="deniedView" hidden>
@@ -705,6 +718,7 @@ dialog.small { width: min(460px, calc(100vw - 24px)); }
   function showNote(text) { const n = $("note"); n.textContent = text; n.hidden = !text; }
   function showView(v) { // "boot" | "login" | "denied" | "app"
     $("loginView").hidden = v !== "login";
+    if (v === "login" && typeof checkSetup === "function") checkSetup();
     $("deniedView").hidden = v !== "denied";
     $("appView").hidden = v !== "app";
     $("userBox").hidden = !(v === "app" || v === "denied");
@@ -805,6 +819,38 @@ dialog.small { width: min(460px, calc(100vw - 24px)); }
     $("lSubmit").disabled = false;
     if (error) loginMsg(/invalid/i.test(error.message) ? "البريد أو كلمة المرور غير صحيحة." : "تعذّر تسجيل الدخول الآن. حاول مرة أخرى.");
   });
+  /* ---------- first admin (one time, needs the setup code) ---------- */
+  let setupChecked = false;
+  async function checkSetup() {
+    if (setupChecked) return;
+    setupChecked = true;
+    try {
+      const { data } = await sb.functions.invoke("setup-admin", { body: { action: "status" } });
+      if (data?.needsSetup) { $("setupForm").hidden = false; $("loginForm").hidden = true; }
+    } catch {}
+  }
+  function setupMsg(t) { $("setupMsg").textContent = t; $("setupMsg").hidden = !t; }
+  $("setupForm").addEventListener("submit", async (e) => {
+    e.preventDefault(); setupMsg("");
+    const email = $("sEmail").value.trim().toLowerCase(), code = $("sCode").value.trim(), password = $("sPass").value;
+    if (!email || !code) { setupMsg("اكتب البريد ورمز الإعداد."); return; }
+    if (password.length < 8) { setupMsg("كلمة المرور يجب أن تكون 8 أحرف على الأقل."); $("sPass").focus(); return; }
+    if (password !== $("sPass2").value) { setupMsg("كلمتا المرور غير متطابقتين."); $("sPass2").focus(); return; }
+    $("sSubmit").disabled = true;
+    const { error } = await sb.functions.invoke("setup-admin", { body: { action: "setup", email, code, password } });
+    if (error) {
+      let c = ""; try { c = (await error.context.json()).error; } catch {}
+      setupMsg(c === "bad_code" ? "البريد أو رمز الإعداد غير صحيح." : c === "already_set_up" ? "تم إعداد المدير من قبل. ادخل ببياناتك." : "تعذّر الإعداد. حاول مرة أخرى.");
+      $("sSubmit").disabled = false;
+      if (c === "already_set_up") { $("setupForm").hidden = true; $("loginForm").hidden = false; }
+      return;
+    }
+    const { error: inErr } = await sb.auth.signInWithPassword({ email, password });
+    $("sSubmit").disabled = false;
+    $("setupForm").hidden = true; $("loginForm").hidden = false;
+    if (inErr) loginMsg("أُنشئ حساب المدير. سجّل الدخول الآن ببريدك وكلمة المرور.", true);
+  });
+
   const signOut = async () => { await sb.auth.signOut(); goHome(); };
 
   /* ---------- team: admin issues logins (email + password) ---------- */
